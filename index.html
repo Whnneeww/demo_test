@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ファイル共有テスト</title>
+</head>
+<body>
+    <h1>ファイルを共有するデモ</h1>
+    <button id="shareButton">ファイルを共有</button>
+
+    <script>
+        // 共有するファイルを作成する関数
+        function createFileAndShare() {
+            // 共有する内容を準備します
+            const fileContent = 'こんにちは、これはテストファイルです！';
+            const blob = new Blob([fileContent], { type: 'text/plain' }); // テキストファイルを生成
+            const file = new File([blob], 'test.txt', { type: 'text/plain' });
+
+            // 共有を行います
+            if (navigator.share) {
+                navigator.share({
+                    files: [file],
+                    title: 'ファイルを共有しました',
+                    text: 'これが私のテストファイルです。',
+                })
+                .then(() => {
+                    console.log('共有が成功しました！');
+                })
+                .catch((error) => {
+                    console.error('共有に失敗しました:', error);
+                });
+            } else {
+                console.log('このブラウザでは共有機能がサポートされていません。');
+            }
+        }
+
+        // ボタンクリックで共有を開始
+        document.getElementById('shareButton').addEventListener('click', createFileAndShare);
+    </script>
+</body>
+</html>
