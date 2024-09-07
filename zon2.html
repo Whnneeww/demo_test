@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whneeww Archive Creator</title>
+    <script src="https://program-library.i-i.f5.si/js/whn/0.1.0.js" defer></script>
+</head>
+<body>
+
+    <h1>Whneeww Archive Creator</h1>
+    <input type="file" id="file-input" multiple />
+    <button id="create-archive">アーカイブを作成</button>
+    <a id="download-link" style="display:none">ダウンロード</a>
+
+    <script>
+        document.getElementById('create-archive').addEventListener('click', async () => {
+            const fileInput = document.getElementById('file-input');
+            const files = fileInput.files;
+
+            if (files.length === 0) {
+                alert('ファイルを選択してください。');
+                return;
+            }
+
+            const fileArray = Array.from(files).map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        resolve({ name: file.name, data: reader.result });
+                    };
+                    reader.readAsArrayBuffer(file);
+                });
+            });
+
+            const resolvedFiles = await Promise.all(fileArray);
+            
+            // 外部ライブラリを使ってアーカイブを作成
+            const archiveBlob = createWhneewwArchive(resolvedFiles);
+
+            const downloadLink = document.getElementById('download-link');
+            const url = URL.createObjectURL(archiveBlob);
+            downloadLink.href = url;
+            downloadLink.download = 'archive.whn';
+            downloadLink.textContent = 'アーカイブをダウンロード';
+            downloadLink.style.display = 'block';
+        });
+    </script>
+
+</body>
+</html>
