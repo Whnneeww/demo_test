@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>音声取得とテキスト変換</title>
+</head>
+<body>
+    <h1>マイクから音声を取得してテキストに変換する</h1>
+    <button id="start-button">音声開始</button>
+    <p id="output"></p>
+
+    <script>
+        const output = document.getElementById('output');
+        const startButton = document.getElementById('start-button');
+
+        // 音声認識オブジェクトを作成
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+        recognition.lang = 'ja-JP'; // 日本語
+        recognition.interimResults = false;
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            output.textContent = "変換されたテキスト: " + transcript;
+        };
+
+        recognition.onerror = (event) => {
+            output.textContent = "エラー: " + event.error;
+        };
+
+        startButton.addEventListener('click', () => {
+            recognition.start();
+            output.textContent = "音声認識を開始しました...";
+        });
+    </script>
+</body>
+</html>
