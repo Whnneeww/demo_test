@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>AudioLibrary HAX変換デモ</title>
+    <script src="https://program-library.i-i.f5.si/js/audioLibrary/0.1.0.js"></script>
+</head>
+<body>
+    <h1>AudioLibrary HAX変換デモ</h1>
+    <input type="file" id="audioFileInput" accept="audio/mp3" />
+    <button id="downloadButton" disabled>HAXデータをダウンロード</button>
+    <input type="file" id="haxFileInput" accept=".stxt" />
+    <button id="playButton" disabled>HAXデータを再生</button>
+
+    <script>
+        const audioProcessor = new AudioProcessor();
+
+        // 音声ファイルの処理
+        document.getElementById('audioFileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                await audioProcessor.processAudioFile(file);
+                document.getElementById('downloadButton').disabled = false;
+            }
+        });
+
+        // HAXデータのダウンロード
+        document.getElementById('downloadButton').addEventListener('click', () => {
+            const haxData = audioProcessor.haxData;
+            const blob = new Blob([haxData], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'audioData.stxt'; // 拡張子は.stxt
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // HAXデータの再生
+        document.getElementById('haxFileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const text = await file.text();
+                audioProcessor.haxData = text; // HAXデータを設定
+                document.getElementById('playButton').disabled = false;
+            }
+        });
+
+        document.getElementById('playButton').addEventListener('click', () => {
+            audioProcessor.playHAXData(audioProcessor.haxData);
+        });
+    </script>
+</body>
+</html>
