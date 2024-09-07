@@ -3,62 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マイク音声取得と再生</title>
+    <title>音声ファイル取得と再生</title>
+    <script src="https://program-library.i-i.f5.si/js/audioLibrary/0.1.0.js"></script>
 </head>
 <body>
-    <h1>マイク音声取得とHAXデータ変換</h1>
-    <button id="startButton">音声取得開始</button>
+    <h1>音声ファイルからHAXデータ変換</h1>
+    <input type="file" id="audioFileInput" accept="audio/mp3" />
     <button id="playButton" disabled>HAXデータを再生</button>
+    
     <script>
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-let haxData = [];
+        const audioProcessor = new AudioProcessor();
 
-// 音声取得ボタンのクリックイベント
-document.getElementById('startButton').addEventListener('click', async () => {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const source = audioContext.createMediaStreamSource(stream);
-        const processor = audioContext.createScriptProcessor(2048, 1, 1);
+        document.getElementById('audioFileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                await audioProcessor.processAudioFile(file);
+                document.getElementById('playButton').disabled = false; // 再生ボタンを有効化
+            }
+        });
 
-        // 音声をHAXデータに変換する処理
-        processor.onaudioprocess = (event) => {
-            const inputBuffer = event.inputBuffer.getChannelData(0);
-            haxData = convertToHAX(inputBuffer);
-            console.log(haxData); // HAXデータを表示
-            document.getElementById('playButton').disabled = false; // 再生ボタンを有効化
-        };
-
-        source.connect(processor);
-        processor.connect(audioContext.destination);
-    } catch (error) {
-        console.error('マイクの取得に失敗しました:', error);
-    }
-});
-
-// HAXデータに変換する関数
-function convertToHAX(inputBuffer) {
-    // サンプル変換ロジック（実際のHAX形式に応じて実装）
-    return Array.from(inputBuffer).map(sample => Math.max(-1, Math.min(1, sample))); // 例: -1から1の範囲を保持
-}
-
-// HAXデータを再生する関数
-document.getElementById('playButton').addEventListener('click', () => {
-    playHAXData(haxData);
-});
-
-// 入力されたHAXデータを再生する関数
-function playHAXData(haxArray) {
-    const audioBuffer = audioContext.createBuffer(1, haxArray.length, audioContext.sampleRate);
-    audioBuffer.copyToChannel(new Float32Array(haxArray), 0);
-    const source = audioContext.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(audioContext.destination);
-    source.start();
-}
-</script>
+        document.getElementById('playButton').addEventListener('click', () => {
+            audioProcessor.playHAXData(audioProcessor.haxData);
+        });
+    </script>
 </body>
 </html>
-```
-
-### JavaScript (script.js)
-```javascript
