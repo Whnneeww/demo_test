@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhneewwImage Viewer</title>
+</head>
+<body>
+    <h1>WhneewwImage Viewer</h1>
+    <button id="generateButton">画像を生成する</button>
+    <canvas id="imageCanvas"></canvas>
+
+    <script>
+        // WhneewwImageを生成する関数
+        function createWhneewwImage(width, height, color) {
+            const header = new Uint8Array(8);
+            const magicNumber = new TextEncoder().encode('WIMG');
+            header.set(magicNumber, 0);
+            header.set(new Uint32Array([1]).buffer, 4); // Version 1
+
+            const pixelData = new Uint8Array(width * height * 3);
+            for (let i = 0; i < width * height; i++) {
+                pixelData[i * 3] = color[0];     // R
+                pixelData[i * 3 + 1] = color[1]; // G
+                pixelData[i * 3 + 2] = color[2]; // B
+            }
+
+            return new Blob([header, pixelData], { type: 'application/octet-stream' });
+        }
+
+        // BlobをURLに変換し、canvasに表示する関数
+        function displayWhneewwImage(blob) {
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.getElementById('imageCanvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 100;   // 幅
+                canvas.height = 100;  // 高さ
+                ctx.drawImage(img, 0, 0);
+                URL.revokeObjectURL(url); // URLを解放
+            };
+            img.src = url;
+        }
+
+        // ボタンがクリックされたときに画像を生成するイベント
+        document.getElementById('generateButton').addEventListener('click', () => {
+            const width = 100;
+            const height = 100;
+            const color = [255, 0, 0]; // 赤色
+            const blob = createWhneewwImage(width, height, color);
+            displayWhneewwImage(blob);
+        });
+    </script>
+</body>
+</html>
