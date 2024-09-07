@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アーカイブ作成・編集ツール</title>
+    <script src="https://program-library.i-i.f5.si/js/whn/0.0.2-a.js"></script> <!-- ライブラリのURL -->
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #fileList { margin: 20px 0; }
+        button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>アーカイブ作成・編集ツール</h1>
+    <input type="file" id="fileInput" multiple />
+    <button id="createArchive">アーカイブ作成</button>
+    
+    <h2>ファイルリスト</h2>
+    <ul id="fileList"></ul>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const createArchiveButton = document.getElementById('createArchive');
+
+        let filesToArchive = [];
+
+        fileInput.addEventListener('change', (event) => {
+            const selectedFiles = event.target.files;
+            filesToArchive = [...selectedFiles]; // 選択したファイルを保存
+            updateFileList();
+        });
+
+        function updateFileList() {
+            fileList.innerHTML = ''; // リストをクリア
+            filesToArchive.forEach(file => {
+                const listItem = document.createElement('li');
+                listItem.textContent = file.name; // ファイル名を表示
+                fileList.appendChild(listItem);
+            });
+        }
+
+        createArchiveButton.addEventListener('click', () => {
+            if (filesToArchive.length === 0) {
+                alert('ファイルを選択してください！');
+                return;
+            }
+
+            // Whneewwライブラリを使用してアーカイブを作成
+            const archive = new WhnneewwArchive(); // ここでアーカイブオブジェクトを作成
+            filesToArchive.forEach(file => {
+                archive.addFile(file); // ファイルをアーカイブに追加
+            });
+
+            // アーカイブを保存するロジック
+            archive.save('myArchive.zip'); // 任意のファイル名で保存
+
+            alert('アーカイブが作成されました！');
+        });
+    </script>
+</body>
+</html>
