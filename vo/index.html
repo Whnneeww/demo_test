@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>きらきらぼしのさいせいサイト</title>
+    <script src="https://program-library.i-i.f5.si/js/audioLibrary/0.2.0.js"></script>
+</head>
+<body>
+    <h1>きらきらぼし</h1>
+    <button id="playButton">さいせい</button>
+
+    <script>
+        class AudioLibrary {
+            constructor() {
+                this.context = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            async playAudio(lyric, pitch = 60, length = 4) {
+                for (const char of lyric) {
+                    const audioFilePath = `./VOCALOID/${char}.wav`;
+                    const response = await fetch(audioFilePath);
+                    const arrayBuffer = await response.arrayBuffer();
+                    const audioBuffer = await this.context.decodeAudioData(arrayBuffer);
+
+                    const source = this.context.createBufferSource();
+                    source.buffer = audioBuffer;
+
+                    // おとのながさとぴっちのちょうせい
+                    source.playbackRate.value = this.calculatePlaybackRate(length);
+                    source.detune.value = this.calculateDetune(pitch);
+                    source.connect(this.context.destination);
+                    source.start();
+                    
+                    // かくおんのさいせいかんかくをあける
+                    await new Promise(resolve => setTimeout(resolve, 500)); // 500msのかんかく
+                }
+            }
+
+            calculatePlaybackRate(length) {
+                return 1 + (length - 4) / 4; 
+            }
+
+            calculateDetune(pitch) {
+                return (pitch - 60) * 100; 
+            }
+        }
+
+        document.getElementById('playButton').addEventListener('click', async () => {
+            const audioLibrary = new AudioLibrary();
+            const lyrics = 'きらきらぼし'; // かし
+            await audioLibrary.playAudio(lyrics, 60, 4); // ぴっち60, ながさ4でさいせい
+        });
+    </script>
+</body>
+</html>
