@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Whn2Library Demo</title>
+    <script>
+class Whn2Library {
+    constructor() {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.audioBuffer = null; // デコードされた音声データを保持
+        this.source = null;       // オーディオソースノード
+    }
+
+    // 音声ファイルをwhn2フォーマットに変換するメソッド
+    async convertToWhn2(audioFile) {
+        const arrayBuffer = await audioFile.arrayBuffer();
+        this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+
+        // トラック名と長さをコンソールに表示
+        console.log(`変換完了: ${audioFile.name}, 長さ: ${this.audioBuffer.duration}秒`);
+    }
+
+    // 音声データを逆圧縮するメソッド（ダミー）
+    _decompressAudioData(compressedData) {
+        // 実際には圧縮データを解凍するロジックを実装する
+        return this.audioBuffer; // ダミー：元のデータを返す
+    }
+
+    // 音声データを再生するメソッド
+    playWhn2() {
+        if (!this.audioBuffer) {
+            console.warn('音声データがありません。最初に音声を変換してください。');
+            return;
+        }
+        
+        // ソースノードを作成し、再生
+        if (this.source) {
+            this.source.stop(); // すでに再生中なら停止
+        }
+
+        this.source = this.audioContext.createBufferSource();
+        this.source.buffer = this.audioBuffer;
+        this.source.connect(this.audioContext.destination);
+        this.source.start(0);
+
+        console.log('再生中...');
+    }
+}
+</script>
+</head>
+<body>
+    <h1>Whn2Library Demo</h1>
+    <input type="file" id="audioFileInput" accept="audio/*" />
+    <button id="convertButton">変換</button>
+    <button id="playButton" disabled>再生</button>
+
+    <script>
+        const whn2Library = new Whn2Library();
+
+        document.getElementById('convertButton').addEventListener('click', async () => {
+            const fileInput = document.getElementById('audioFileInput');
+            const file = fileInput.files[0];
+            if (file) {
+                await whn2Library.convertToWhn2(file);
+                document.getElementById('playButton').disabled = false;
+            }
+        });
+
+        document.getElementById('playButton').addEventListener('click', () => {
+            whn2Library.playWhn2();
+        });
+    </script>
+</body>
+</html>
