@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Whnアーカイブ生成・編集ツール</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js"></script>
+    <script src="https://program-library.i-i.f5.si/js/whn/2.3.0.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #folderStructure { border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Whnアーカイブ生成・編集ツール</h1>
+    <div>
+        <input type="text" id="folderNameInput" placeholder="新しいフォルダー名" />
+        <button id="addFolderButton">フォルダ追加</button>
+    </div>
+    <div id="folderStructure"></div>
+    <button id="compressButton">アーカイブを圧縮</button>
+    <button id="extractButton">アーカイブを解凍</button>
+    <input type="file" id="fileInput" accept=".zip" />
+    <div id="message"></div>
+
+    <script>
+        const rootFolder = WhneewwArchive.createItem('Root', 'folder');
+        const folderStructureDiv = document.getElementById('folderStructure');
+        const messageDiv = document.getElementById('message');
+
+        function updateFolderStructure() {
+            folderStructureDiv.innerHTML = '';
+            const displayStructure = (folder) => {
+                const folderDiv = document.createElement('div');
+                folderDiv.textContent = folder.name;
+                folderStructureDiv.appendChild(folderDiv);
+
+                folder.children.forEach(child => {
+                    const childDiv = document.createElement('div');
+                    childDiv.style.paddingLeft = '20px';
+                    childDiv.textContent = child.name;
+                    folderStructureDiv.appendChild(childDiv);
+                });
+            };
+            displayStructure(rootFolder);
+        }
+
+        document.getElementById('addFolderButton').addEventListener('click', () => {
+            const folderName = document.getElementById('folderNameInput').value;
+            if (folderName) {
+                const result = WhneewwArchive.addFolder(rootFolder, folderName);
+                messageDiv.textContent = result.message;
+                updateFolderStructure();
+            } else {
+                messageDiv.textContent = 'フォルダー名を入力してください。';
+            }
+            document.getElementById('folderNameInput').value = '';
+        });
+
+        document.getElementById('compressButton').addEventListener('click', () => {
+            const compressedBlob = WhneewwArchive.createCompressed([rootFolder]);
+            const url = URL.createObjectURL(compressedBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'archive.zip';
+            link.click();
+            messageDiv.textContent = 'アーカイブが生成されました。ダウンロード中...';
+        });
+
+        document.getElementById('extractButton').addEventListener('click', async () => {
+            const fileInput = document.getElementById('fileInput');
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const blob = new Blob([file]);
+                const items = await WhneewwArchive.extractCompressed(blob);
+                messageDiv.textContent = 'アーカイブが解凍されました。';
+                console.log(items);
+                updateFolderStructure(); // UIを更新
+            } else {
+                messageDiv.textContent = 'ファイルを選択してください。';
+            }
+        });
+
+        updateFolderStructure(); // 初期表示
+    </script>
+</body>
+</html>
