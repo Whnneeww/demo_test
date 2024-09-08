@@ -1,4 +1,17 @@
-document.getElementById('zipFileInput').addEventListener('change', (event) => {
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ZIPファイルバイナリ編集ツール</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <h1>ZIPファイルバイナリ編集ツール</h1>
+    <input type="file" id="zipFileInput" accept=".zip" />
+    <button id="processButton" disabled>バイナリを編集</button>
+
+    <script>
+        document.getElementById('zipFileInput').addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
                 document.getElementById('processButton').disabled = false;
