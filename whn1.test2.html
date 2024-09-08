@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>whn1データ再生</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>whn1データ再生</h1>
+    <input type="file" id="whnFileInput" accept=".whn1" />
+    <button id="playButton" disabled>再生</button>
+
+    <script>
+        class WhnPlayer {
+            constructor() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.bufferSource = null;
+            }
+
+            async playWhn(file) {
+                const arrayBuffer = await file.arrayBuffer();
+                const whnData = new Uint8Array(arrayBuffer);
+
+                const audioBuffer = this.audioContext.createBuffer(1, whnData.length, this.audioContext.sampleRate);
+                audioBuffer.getChannelData(0).set(whnData.map(v => v / 127)); // -127～127から-1～1へ変換
+
+                this.bufferSource = this.audioContext.createBufferSource();
+                this.bufferSource.buffer = audioBuffer;
+                this.bufferSource.connect(this.audioContext.destination);
+                this.bufferSource.start();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const whnPlayer = new WhnPlayer();
+
+            document.getElementById('whnFileInput').addEventListener('change', async (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    document.getElementById('playButton').disabled = false;
+                    document.getElementById('playButton').onclick = async () => {
+                        await whnPlayer.playWhn(file);
+                    };
+                } else {
+                    document.getElementById('playButton').disabled = true;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
