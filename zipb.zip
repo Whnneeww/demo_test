@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZIPファイル軽量化ツール</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+    <h1>ZIPファイル軽量化ツール</h1>
+    <input type="file" id="zipFileInput" accept=".zip" />
+    <button id="processZipButton">軽量化してダウンロード</button>
+
+    <script>
+        document.getElementById('processZipButton').addEventListener('click', async () => {
+            const input = document.getElementById('zipFileInput');
+            if (input.files.length === 0) {
+                alert('ZIPファイルを選択してください。');
+                return;
+            }
+
+            const file = input.files[0];
+            const zip = new JSZip();
+
+            // ZIPファイルを読み込む
+            const zipContent = await file.arrayBuffer();
+            const zipFile = await zip.loadAsync(zipContent);
+
+            const newZip = new JSZip();
+
+            // 各エントリを処理して新しいZIPを作成
+            for (const fileName in zipFile.files) {
+                const fileEntry = zipFile.files[fileName];
+
+                // メタデータを削除、例えば画像ファイルのサイズを縮小するなどの処理ができます
+                if (!fileEntry.dir) { // フォルダではない場合
+                    const content = await fileEntry.async("blob");
+                    newZip.file(fileEntry.name, content);
+                }
+            }
+
+            // 新しいZIPを生成してダウンロード
+            const newZipBlob = await newZip.generateAsync({ type: "blob" });
+            saveAs(newZipBlob, "軽量化された.zip");
+        });
+    </script>
+</body>
+</html>
