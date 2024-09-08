@@ -1,0 +1,62 @@
+document.getElementById('zipFileInput').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('processButton').disabled = false;
+            }
+        });
+
+        document.getElementById('processButton').addEventListener('click', async () => {
+            const fileInput = document.getElementById('zipFileInput').files[0];
+            const zip = new JSZip();
+
+            // ZIPを読み込む
+            zip.loadAsync(fileInput).then(async (content) => {
+                let base64FilePromises = [];
+
+                for (const fileName in content.files) {
+                    base64FilePromises.push(content.file(fileName).async("base64"));
+                }
+
+                const base64Files = await Promise.all(base64FilePromises);
+
+                // バイナリデータの編集（ここでそれぞれのファイルのバイナリを操作）
+                const editedFiles = base64Files.map(base64 => {
+                    // 例として、特定のバイトを操作すると仮定
+                    const binaryString = atob(base64);
+                    const uint8Array = new Uint8Array(binaryString.length);
+
+                    for (let i = 0; i < binaryString.length; i++) {
+                        uint8Array[i] = binaryString.charCodeAt(i);
+
+                        // ここでバイナリデータの編集処理を追加
+                        // 例えば、特定の位置のバイトを変更
+                        if (i === 0) {
+                            uint8Array[i] = 0; // ここで1バイト目を0に設定
+                        }
+                    }
+
+                    return uint8Array;
+                });
+
+                // 新しいZIPを作成
+                const newZip = new JSZip();
+                editedFiles.forEach((binaryFile, index) => {
+                    newZip.file(Object.keys(content.files)[index], binaryFile);
+                });
+
+                const newBlob = await newZip.generateAsync({ type: "blob" });
+
+                // 新しいZIPをダウンロード
+                const url = URL.createObjectURL(newBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '編集されたファイル.zip';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        });
+    </script>
+</body>
+</html>
