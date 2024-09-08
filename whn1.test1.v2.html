@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>音声ファイルからwhn1へ変換</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>音声ファイルからwhn1へ変換</h1>
+    <input type="file" id="fileInput" accept="audio/*" />
+
+    <script>
+        class WaveToWhnConverter {
+            constructor() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            async convertToWhn(file) {
+                const arrayBuffer = await file.arrayBuffer();
+                const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+
+                // 音声データをwhn1形式の配列に変換
+                const whnData = this.processAudioBufferToWhn(audioBuffer);
+
+                return whnData;
+            }
+
+            processAudioBufferToWhn(audioBuffer) {
+                const channelData = audioBuffer.getChannelData(0); // 左チャンネルのみ
+                const whnData = new Uint8Array(channelData.length);
+
+                // 音声データをそのまま整数に変換して保存
+                for (let i = 0; i < channelData.length; i++) {
+                    whnData[i] = Math.max(-127, Math.min(127, Math.floor(channelData[i] * 127))); // -1～1から-127～127に変換
+                }
+
+                return whnData;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const waveToWhnConverter = new WaveToWhnConverter();
+
+            document.getElementById('fileInput').addEventListener('change', async (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const whnData = await waveToWhnConverter.convertToWhn(file);
+                    console.log('whn1データが生成されました！', whnData);
+
+                    // whnデータをファイルに保存する例
+                    const blob = new Blob([whnData], { type: 'application/octet-stream' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'output.whn1';
+                    link.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
