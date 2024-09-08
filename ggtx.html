@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ファイル生成・ダウンロード・プレイヤー</title>
+    <script src="https://program-library.i-i.f5.si/js/whn/2.0.1.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #player {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ファイル生成・ダウンロード・プレイヤー</h1>
+    
+    <input type="file" id="uploadFile" accept=".txt" />
+    <button id="playButton" disabled>再生</button>
+    
+    <h2>生成したファイル</h2>
+    <button id="generateFileButton">ファイル生成 & ダウンロード</button>
+    
+    <div id="player"></div>
+    
+    <script>
+document.getElementById('generateFileButton').addEventListener('click', () => {
+    const data = "ここに生成するデータを入力します。"; // 生成したいデータ
+    const blob = new Blob([data], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+  
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'generated_file.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+document.getElementById('uploadFile').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const contents = e.target.result;
+            document.getElementById('player').innerText = "アップロードされた内容:\n" + contents;
+        };
+        reader.readAsText(file);
+        document.getElementById('playButton').disabled = false; // ボタンを有効にする
+    }
+});
+
+document.getElementById('playButton').addEventListener('click', () => {
+    const playerContent = document.getElementById('player').innerText;
+    alert("再生する内容:\n" + playerContent);
+});
+    </script>
+</body>
+</html>
