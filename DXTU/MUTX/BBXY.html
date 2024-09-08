@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whn1 Audio Converter</title>
+    <script src="https://program-library.i-i.f5.si/js/whn1/0.1.0.js"></script>
+</head>
+<body>
+    <h1>Whn1 Audio Converter</h1>
+    <input type="file" id="audioFileInput" accept="audio/*" />
+    <button id="convertToWhn1Button">Convert to WHN1</button>
+    <button id="convertToMp3Button" disabled>Convert WHN1 to MP3</button>
+    <button id="playWhn1Button" disabled>Play WHN1</button>
+    
+    <script>
+        const audioProcessor = new Whn1AudioFormat();
+
+        document.getElementById('convertToWhn1Button').addEventListener('click', async () => {
+            const fileInput = document.getElementById('audioFileInput');
+            const file = fileInput.files[0];
+            if (file) {
+                await audioProcessor.processAudioFile(file);
+                const whn1Blob = new Blob(audioProcessor.audioChunks, { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(whn1Blob);
+                
+                // WHN1をダウンロード
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'audio.whn1';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                // MP3変換ボタンを有効にする
+                document.getElementById('convertToMp3Button').disabled = false;
+                document.getElementById('playWhn1Button').disabled = false;
+            }
+        });
+
+        document.getElementById('convertToMp3Button').addEventListener('click', () => {
+            // この部分ではwhn1をMP3に変換する機能を実装する必要があります。
+            alert('MP3変換機能はまだ実装されていません。');
+        });
+
+        document.getElementById('playWhn1Button').addEventListener('click', () => {
+            audioProcessor.playWhn1Chunks();
+        });
+    </script>
+</body>
+</html>
