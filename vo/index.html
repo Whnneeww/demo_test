@@ -14,9 +14,13 @@
         class AudioLibrary {
             constructor() {
                 this.context = new (window.AudioContext || window.webkitAudioContext)();
+                this.isPlaying = false; // 再生中フラグ
             }
 
-            async playAudio(lyric, pitch = 60, length = 4) {
+            async playAudio(lyric, pitch = 60, length = 4, loopLength = 2) {
+                if (this.isPlaying) return; // 再生中なら何もしない
+                this.isPlaying = true; // 再生中に設定
+
                 for (const char of lyric) {
                     const audioFilePath = `./VOCALOID/${char}.wav`;
                     const response = await fetch(audioFilePath);
@@ -29,12 +33,22 @@
                     // おとのながさとぴっちのちょうせい
                     source.playbackRate.value = this.calculatePlaybackRate(length);
                     source.detune.value = this.calculateDetune(pitch);
+
+                    // ループ再生を設定
+                    source.loop = true;
                     source.connect(this.context.destination);
                     source.start();
-                    
-                    // かくおんのさいせいかんかくをあける
-                    await new Promise(resolve => setTimeout(resolve, 500)); // 500msのかんかく
+
+                    // 音声を指定の長さ（loopLength秒）だけ再生
+                    setTimeout(() => {
+                        source.stop();
+                    }, loopLength * 1000); // ループする秒数をミリ秒に変換
+
+                    // 次の音声の再生までの間隔
+                    await new Promise(resolve => setTimeout(resolve, length * 1000)); // 気になる音の長さ
                 }
+
+                this.isPlaying = false; // 再生終了時にフラグを戻す
             }
 
             calculatePlaybackRate(length) {
@@ -49,7 +63,7 @@
         document.getElementById('playButton').addEventListener('click', async () => {
             const audioLibrary = new AudioLibrary();
             const lyrics = 'きらきらぼし'; // かし
-            await audioLibrary.playAudio(lyrics, 60, 4); // ぴっち60, ながさ4でさいせい
+            await audioLibrary.playAudio(lyrics, 60, 4, 2); // ぴっち60, ながさ4でさいせい, ループさせる長さは2秒
         });
     </script>
 </body>
