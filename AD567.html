@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音声ファイル変換ツール</title>
+    <script src="https://program-library.i-i.f5.si/js/audioLibrary/0.2.0.js"></script>
+    <script src="https://rawgit.com/edwardhinkle/libmp3lame.js/master/lame.min.js"></script>
+</head>
+<body>
+    <h1>音声ファイル変換ツール</h1>
+    <input type="file" id="audioFileInput" accept="audio/*" />
+    <button id="convertButton" disabled>WHNに変換</button>
+    <button id="playButton" disabled>WHNを再生</button>
+    <button id="downloadButton" disabled>WHNをMP3に変換</button>
+
+    <script>
+        let whnData = null;
+
+        class AudioProcessingLibrary {
+            constructor() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            async loadAudioFile(url) {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                return await this.audioContext.decodeAudioData(arrayBuffer);
+            }
+
+            processAudioBufferToWhn(audioBuffer) {
+                const numberOfChannels = audioBuffer.numberOfChannels;
+                const whnData = [];
+
+                for (let channel = 0; channel < numberOfChannels; channel++) {
+                    const channelData = audioBuffer.getChannelData(channel);
+                    const floatData = new Float32Array(channelData.length);
+                    
+                    for (let i = 0; i < channelData.length; i++) {
+                        floatData[i] = channelData[i];
+                    }
+                    
+                    whnData.push(floatData); 
+                }
+                return whnData;
+            }
+
+            playWhn(whnData) {
+                const audioBuffer = this.audioContext.createBuffer(whnData.length, whnData[0].length, this.audioContext.sampleRate);
+                
+                for (let channel = 0; channel < whnData.length; channel++) {
+                    audioBuffer.copyToChannel(whnData[channel], channel);
+                }
+                
+                const source = this.audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(this.audioContext.destination);
+                source.start();
+            }
+        }
+
+        async function convertAudioToWhn(file) {
+            const audioLibrary = new AudioProcessingLibrary();
+            const audioBuffer = await audioLibrary.loadAudioFile(URL.createObjectURL(file));
+            whnData = audioLibrary.processAudioBufferToWhn(audioBuffer);
+        }
+
+        function playWhnData() {
+            const audioLibrary = new AudioProcessingLibrary();
+            audioLibrary.playWhn(whnData);
+        }
+
+        async function convertWhnToMp3() {
+            const mp3encoder = new lamejs.Mp3Encoder(whnData.length, 44100, 128);
+            let mp3Data = [];
+
+            for (const channelData of whnData) {
+                const buffer = new Int16Array(channelData.length);
+                for (let i = 0; i < channelData.length; i++) {
+                    buffer[i] = channelData[i] < 0 ? Math.max(-32768, Math.min(32767, channelData[i] * 32768)) : Math.min(32767, channelData[i] * 32768);
+                }
+                const mp3Buffer = mp3encoder.encodeBuffer(buffer);
+                if (mp3Buffer.length > 0) {
+                    mp3Data.push(new Int8Array(mp3Buffer));
+                }
+            }
+
+            const finalBuffer = mp3encoder.flush();
+            if (finalBuffer.length > 0) {
+                mp3Data.push(new Int8Array(finalBuffer));
+            }
+
+            const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'output.mp3';
+            link.click();
+        }
+
+        document.getElementById('audioFileInput').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                convertAudioToWhn(file).then(() => {
+                    document.getElementById('convertButton').disabled = true;
+                    document.getElementById('playButton').disabled = false;
+                    document.getElementById('downloadButton').disabled = false;
+                });
+            }
+        });
+
+        document.getElementById('convertButton').addEventListener('click', () => {
+            // WHNに変換するボタンがあれば押す
+        });
+
+        document.getElementById('playButton').addEventListener('click', playWhnData);
+        document.getElementById('downloadButton').addEventListener('click', convertWhnToMp3);
+    </script>
+</body>
+</html>
