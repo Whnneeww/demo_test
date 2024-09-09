@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>MP3 から波形画像を生成</title>
+</head>
+<body>
+  <h1>MP3 から波形画像を生成するデモ</h1>
+  <input type="file" id="audioFileInput" accept="audio/mp3" />
+  <canvas id="waveformCanvas" width="800" height="200"></canvas>
+
+  <script>
+    const audioFileInput = document.getElementById('audioFileInput');
+    const canvas = document.getElementById('waveformCanvas');
+    const ctx = canvas.getContext('2d');
+
+    audioFileInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const arrayBuffer = await file.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        
+        drawWaveform(audioBuffer);
+      }
+    });
+
+    function drawWaveform(audioBuffer) {
+      const channelData = audioBuffer.getChannelData(0); // 1チャンネル目を取得
+      const step = Math.ceil(channelData.length / canvas.width);
+      const amp = canvas.height / 2; // Canvasの半分を振幅にする
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Canvasをクリア
+      ctx.fillStyle = '#EEE';
+      ctx.fillRect(0, amp - 1, canvas.width, 2); // 中央ラインを描画
+
+      ctx.beginPath();
+      ctx.moveTo(0, amp); // 初期位置
+
+      for (let i = 0; i < canvas.width; i++) {
+        const min = Math.min(...channelData.slice(i * step, (i + 1) * step)); // 最小値を取得
+        const max = Math.max(...channelData.slice(i * step, (i + 1) * step)); // 最大値を取得
+        ctx.lineTo(i, amp + min * amp); // 最小振幅を描画
+        ctx.lineTo(i, amp + max * amp); // 最大振幅を描画
+      }
+      ctx.lineTo(canvas.width, amp);
+      ctx.strokeStyle = '#FF6B6B'; // 波形の色
+      ctx.stroke();
+    }
+  </script>
+</body>
+</html>
