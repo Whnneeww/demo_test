@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>AudioLibrary Demo with HAX Encoding</title>
+    <script>
+        class AudioProcessor {
+            constructor() {
+                this.haxData = '';
+            }
+
+            async processAudioFile(file) {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const arrayBuffer = await this.readFileAsArrayBuffer(file);
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                // HAXデータの生成
+                this.haxData = await this.generateHAXData(audioBuffer);
+            }
+
+            readFileAsArrayBuffer(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = event => resolve(event.target.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+
+            async generateHAXData(audioBuffer) {
+                const haxHeader = 'HAX_HEADER';
+                const haxAudioData = new Uint8Array(audioBuffer.length);
+                
+                for (let i = 0; i < audioBuffer.length; i++) {
+                    haxAudioData[i] = Math.floor(audioBuffer.getChannelData(0)[i] * 255);
+                }
+
+                const haxBlob = new Blob([haxHeader, haxAudioData], { type: 'application/octet-stream' });
+                return await this.convertBlobToBase64(haxBlob);
+            }
+
+            convertBlobToBase64(blob) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                    reader.readAsDataURL(blob);
+                });
+            }
+
+            playHAXData(data) {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const haxBlob = this.base64ToBlob(data, 'application/octet-stream');
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    audioContext.decodeAudioData(event.target.result, (buffer) => {
+                        const source = audioContext.createBufferSource();
+                        source.buffer = buffer;
+                        source.connect(audioContext.destination);
+                        source.start(0);
+                    });
+                };
+                reader.readAsArrayBuffer(haxBlob);
+            }
+
+            base64ToBlob(base64, type) {
+                const binaryString = window.atob(base64);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return new Blob([bytes], { type: type });
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>エンコーディング & 再生デモ</h1>
+    
+    <h3>MP3ファイルのアップロードと変換</h3>
+    <input type="file" id="mp3FileInput" accept="audio/mpeg" />
+    <button id="convertButton">MP3ファイルを変換して再生</button>
+
+    <h3>HAXデータを再生</h3>
+    <button id="playButton" disabled>HAXデータを再生</button>
+
+    <script>
+        const audioProcessor = new AudioProcessor();
+
+        document.getElementById('mp3FileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                await audioProcessor.processAudioFile(file);
+                document.getElementById('playButton').disabled = false; // 再生ボタンを活性化
+            }
+        });
+
+        document.getElementById('playButton').addEventListener('click', () => {
+            audioProcessor.playHAXData(audioProcessor.haxData);
+        });
+    </script>
+</body>
+</html>
