@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>音声を波形画像に変換</title>
+  <style>
+    canvas {
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <h1>音声を波形画像に変換するデモ</h1>
+  <input type="file" id="audioFileInput" accept="audio/*" />
+  <canvas id="waveformCanvas" width="800" height="200"></canvas>
+  <br>
+  <button id="downloadButton" style="display: none;">画像をダウンロード</button>
+
+  <script>
+    document.getElementById('audioFileInput').addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const arrayBuffer = await file.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        drawWaveform(audioBuffer);
+      }
+    });
+
+    function drawWaveform(audioBuffer) {
+      const canvas = document.getElementById('waveformCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const channelData = audioBuffer.getChannelData(0);
+      const step = Math.ceil(channelData.length / canvas.width);
+      const height = canvas.height / 2;
+      const middle = height + 0.5;
+
+      ctx.beginPath();
+      ctx.moveTo(0, middle);
+
+      for (let i = 0; i < canvas.width; i++) {
+        const min = Math.min(...channelData.slice(i * step, (i + 1) * step));
+        const max = Math.max(...channelData.slice(i * step, (i + 1) * step));
+        ctx.lineTo(i, middle - (min * height));
+        ctx.lineTo(i, middle - (max * height));
+      }
+
+      ctx.strokeStyle = 'black';
+      ctx.stroke();
+
+      // ダウンロードボタンを表示
+      document.getElementById('downloadButton').style.display = 'inline';
+    }
+
+    document.getElementById('downloadButton').addEventListener('click', () => {
+      const canvas = document.getElementById('waveformCanvas');
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = 'waveform.png';
+      link.click();
+    });
+  </script>
+</body>
+</html>
