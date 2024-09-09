@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>画像から音を生成して再生</title>
+    <style>
+        img {
+            margin-top: 20px;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>画像から音を生成して再生</h1>
+    <input type="file" id="imageFileInput" accept="image/*" />
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <button id="generateSoundButton" disabled>生成した画像から音を再生</button>
+    <img id="uploadedImage" alt="アップロードされた画像" style="display:none;" />
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        document.getElementById('imageFileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    document.getElementById('uploadedImage').src = canvas.toDataURL();
+                    document.getElementById('uploadedImage').style.display = 'block';
+                    document.getElementById('generateSoundButton').disabled = false;
+                };
+                img.src = URL.createObjectURL(file);
+            }
+        });
+
+        document.getElementById('generateSoundButton').addEventListener('click', () => {
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const soundData = [];
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            for (let y = 0; y < imgData.height; y++) {
+                for (let x = 0; x < imgData.width; x++) {
+                    const index = (y * imgData.width + x) * 4; // RGBA
+                    const r = imgData.data[index];
+                    const g = imgData.data[index + 1];
+                    const b = imgData.data[index + 2];
+
+                    // ピクセルの明るさを基に音の周波数を計算
+                    const brightness = (r + g + b) / 3;
+                    const frequency = Math.min(2000, brightness * 2); // 2000Hzまで制限して倍増
+
+                    // 音声データを生成
+                    const sampleRate = audioContext.sampleRate;
+                    const duration = 0.1; // 音を生成する時間
+                    const samples = Math.floor(sampleRate * duration);
+                    for (let i = 0; i < samples; i++) {
+                        const time = i / sampleRate;
+                        soundData.push(Math.sin(2 * Math.PI * frequency * time));
+                    }
+                }
+            }
+
+            // 音声データをオーディオバッファに設定
+            const audioBuffer = audioContext.createBuffer(1, soundData.length, audioContext.sampleRate);
+            audioBuffer.getChannelData(0).set(soundData);
+
+            // 音を再生
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+            source.start();
+        });
+
+    </script>
+</body>
+</html>
