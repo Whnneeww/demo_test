@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>音声を画像に変換</title>
+    <style>
+        img {
+            margin-top: 20px;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>音声を画像に変換</h1>
+    <input type="file" id="audioFileInput" accept="audio/*" />
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <button id="downloadButton">画像をダウンロード</button>
+    <button id="playButton" disabled>音声を再生</button>
+    <img id="audioImage" alt="生成された画像" style="display:none;" />
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let audioBuffer;
+        let audioContext;
+        let audioSourceNode;
+
+        document.getElementById('audioFileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioBuffer = await audioContext.decodeAudioData(await file.arrayBuffer());
+                drawImageFromAudio(audioBuffer);
+                document.getElementById('playButton').disabled = false;
+            }
+        });
+
+        function drawImageFromAudio(audioBuffer) {
+            const width = canvas.width;
+            const height = canvas.height;
+            ctx.clearRect(0, 0, width, height);
+
+            const data = audioBuffer.getChannelData(0);
+            const step = Math.ceil(data.length / width);
+
+            for (let x = 0; x < width; x++) {
+                const value = data[x * step];
+                const volume = Math.abs(value);
+                const pitch = (value > 0 ? 0 : height) + (height / 2) * (value * 2);
+                const colorValue = Math.min(255, Math.round(volume * 255));
+                
+                ctx.fillStyle = `rgb(${colorValue}, 0, ${255 - colorValue})`;
+                ctx.fillRect(x, pitch, 1, 1);
+            }
+
+            // 生成された画像を表示
+            const img = document.getElementById('audioImage');
+            img.src = canvas.toDataURL();
+            img.style.display = 'block'; // 画像を表示
+        }
+
+        document.getElementById('downloadButton').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'audio_image.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        document.getElementById('playButton').addEventListener('click', () => {
+            if (audioContext && audioBuffer) {
+                if (audioSourceNode) {
+                    audioSourceNode.stop();
+                }
+                audioSourceNode = audioContext.createBufferSource();
+                audioSourceNode.buffer = audioBuffer;
+                audioSourceNode.connect(audioContext.destination);
+                audioSourceNode.start(0);
+            }
+        });
+    </script>
+</body>
+</html>
