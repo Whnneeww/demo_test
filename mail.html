@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>認証ID送信デモ</title>
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
+</head>
+<body>
+    <h1>認証ID送信デモ</h1>
+    
+    <form id="auth-form">
+        <label for="email">メールアドレス:</label>
+        <input type="email" id="email" required><br>
+
+        <label>
+            <input type="checkbox" id="human-check" required>
+            私はロボットではありません
+        </label><br>
+
+        <button type="submit">認証IDを送信</button>
+    </form>
+
+    <script>
+        // ユニークな認証IDを生成する関数
+        function generateAuthID() {
+            return 'ID-' + Math.random().toString(36).substr(2, 9);
+        }
+
+        (function() {
+            emailjs.init("xydHgjcFevXDJXOK9"); // あなたのUser IDをここに置きます。
+        })();
+
+        document.getElementById('auth-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // フォーム送信を防ぐ
+
+            // ローカルストレージでの認証済み確認
+            if (localStorage.getItem('isAuthenticated')) {
+                alert('既に認証済みです！');
+                return;
+            }
+
+            const email = document.getElementById('email').value;
+            const authID = generateAuthID(); // 認証IDを生成
+
+            // メール送信
+            emailjs.send("service_smbmbd9", "template_7gms6aw", { 
+                to_email: email,
+                message: authID // テンプレートの{{message}}に認証IDを渡す
+            })
+            .then(function(response) {
+                console.log('認証ID送信成功:', response);
+                localStorage.setItem('isAuthenticated', 'true'); // 認証済みマーク
+                alert('認証IDが送信されました！メールを確認してください。');
+            }, function(error) {
+                console.log('認証ID送信失敗:', error);
+                alert('認証IDの送信に失敗しました。もう一度やり直してください。');
+            });
+        });
+    </script>
+</body>
+</html>
