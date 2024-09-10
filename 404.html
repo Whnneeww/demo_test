@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Example with Password</title>
+</head>
+<body>
+    <h1>Example URLs with Passwords</h1>
+    <div id="linkContainer"></div>
+
+    <script>
+        fetch('data.json') // data.jsonというファイル名に注意
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const linkContainer = document.getElementById('linkContainer');
+                for (const key in data) {
+                    const example = data[key];
+
+                    const linkElement = document.createElement('div');
+                    linkElement.innerHTML = `
+                        <p>ID: ${key}, URL: ${example.URL}</p>
+                        ${example.pw ? `<input type="password" placeholder="Password for ${key}" id="${key}-pw" />` : ''}
+                        <button onclick="handleRedirect('${key}', '${example.URL}', '${example.pw ? example.pw : ''}')">
+                            Go to URL
+                        </button>
+                    `;
+                    linkContainer.appendChild(linkElement);
+                }
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+
+        function handleRedirect(id, url, correctPassword) {
+            if (correctPassword) {
+                const passwordInput = document.getElementById(`${id}-pw`);
+                const enteredPassword = passwordInput.value;
+
+                if (enteredPassword === correctPassword) {
+                    window.location.href = url; // 一致した場合、URLに転送
+                } else {
+                    alert('パスワードが間違っています。もう一度試してください。'); // 不一致の場合の警告
+                }
+            } else {
+                window.location.href = url; // パスワードがない場合、そのままURLに転送
+            }
+        }
+    </script>
+</body>
+</html>
