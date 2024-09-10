@@ -29,7 +29,8 @@
                     window.location.href = result.URL;
                 }
             } else {
-                // IDが見つからない場合も何もしない
+                // IDが見つからない場合、エラー404ページに転送
+                displayError404();
             }
         }
 
@@ -41,6 +42,13 @@
 
         function getDataFromJson(json, id) {
             return json[id] || null; // IDに一致するオブジェクトを取得
+        }
+
+        function displayError404() {
+            document.body.innerHTML = `
+                <h1>404 エラー</h1>
+                <p>要求されたページは見つかりませんでした。</p>
+            `;
         }
 
         window.onload = function() {
