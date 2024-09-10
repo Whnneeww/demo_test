@@ -2,54 +2,55 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Example with Password</title>
-</head>
-<body>
-    <h1>Example URLs with Passwords</h1>
-    <div id="linkContainer"></div>
-
+    <title>パスワード入力デモ</title>
     <script>
-        fetch('data.json') // data.jsonというファイル名に注意
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                const linkContainer = document.getElementById('linkContainer');
-                for (const key in data) {
-                    const example = data[key];
+        function validatePassword() {
+            const inputPassword = document.getElementById('passwordInput').value;
+            const id = getIdFromUrl();
 
-                    const linkElement = document.createElement('div');
-                    linkElement.innerHTML = `
-                        <p>ID: ${key}, URL: ${example.URL}</p>
-                        ${example.pw ? `<input type="password" placeholder="Password for ${key}" id="${key}-pw" />` : ''}
-                        <button onclick="handleRedirect('${key}', '${example.URL}', '${example.pw ? example.pw : ''}')">
-                            Go to URL
-                        </button>
-                    `;
-                    linkContainer.appendChild(linkElement);
-                }
-            })
-            .catch(error => {
-                console.error('There was a problem with the fetch operation:', error);
-            });
+            // サンプルJSONデータ
+            const jsonData = {
+                "ox": { "URL": "http://mydomain.co.jp", "pw": "x87s4" },
+                "ob": { "URL": "http://mydomain.co.tk", "pw": "" } // 空のpw
+            };
 
-        function handleRedirect(id, url, correctPassword) {
-            if (correctPassword) {
-                const passwordInput = document.getElementById(`${id}-pw`);
-                const enteredPassword = passwordInput.value;
+            const result = getDataFromJson(jsonData, id); // JSONからデータを取得
 
-                if (enteredPassword === correctPassword) {
-                    window.location.href = url; // 一致した場合、URLに転送
+            if (result) {
+                // パスワードが存在する場合
+                if (result.pw) {
+                    if (inputPassword === result.pw) {
+                        window.location.href = result.URL; // パスワードが一致した場合、指定URLに転送
+                    } else {
+                        // 不一致時には何もせず
+                    }
                 } else {
-                    alert('パスワードが間違っています。もう一度試してください。'); // 不一致の場合の警告
+                    // pwが存在しない場合、自動的に指定URLに転送
+                    window.location.href = result.URL;
                 }
             } else {
-                window.location.href = url; // パスワードがない場合、そのままURLに転送
+                // IDが見つからない場合も何もしない
             }
         }
+
+        function getIdFromUrl() {
+            const url = window.location.href;
+            const urlParts = new URL(url).pathname.split('/');
+            return urlParts[2]; // ID部分を取得
+        }
+
+        function getDataFromJson(json, id) {
+            return json[id] || null; // IDに一致するオブジェクトを取得
+        }
+
+        window.onload = function() {
+            // 初期状態として何も表示しない
+        };
     </script>
+</head>
+<body>
+    <h1>パスワードを入力</h1>
+    <input type="text" id="passwordInput" placeholder="パスワードを入力してください" />
+    <button onclick="validatePassword()">送信</button>
 </body>
 </html>
