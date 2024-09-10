@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>音声から画像の生成</title>
+</head>
+<body>
+    <h1>音声ファイルを画像に変換</h1>
+    <input type="file" id="audioFileInput" accept="audio/*" />
+    <canvas id="outputCanvas" style="display:none;"></canvas>
+    <br>
+    <button id="downloadButton" style="display:none;">画像をダウンロード</button>
+    
+    <script>
+        document.getElementById('audioFileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const arrayBuffer = await file.arrayBuffer();
+                const haxData = convertToHAX(arrayBuffer); // データ変換関数
+                const colors = createColorArray(haxData); // 6桁のカラーコード配列を生成
+                generateImage(colors);
+                document.getElementById('downloadButton').style.display = 'inline'; // ダウンロードボタンを表示
+            }
+        });
+
+        function convertToHAX(buffer) {
+            // バイナリーデータをHAX形式に変換する処理
+            return "HAX_DATA"; // 実際の変換処理に置き換えてください
+        }
+
+        function createColorArray(haxData) {
+            // HAXデータを6桁ごとに分割し、カラーコード配列を生成
+            const colors = [];
+            for (let i = 0; i < haxData.length; i += 6) {
+                colors.push(`#${haxData.slice(i, i + 6)}`);
+            }
+            return colors;
+        }
+
+        function generateImage(colors) {
+            const canvas = document.getElementById('outputCanvas');
+            const ctx = canvas.getContext('2d');
+            const dimension = Math.ceil(Math.sqrt(colors.length));
+            canvas.width = dimension;
+            canvas.height = dimension;
+
+            colors.forEach((color, index) => {
+                const x = index % dimension;
+                const y = Math.floor(index / dimension);
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, 1, 1);
+            });
+        }
+
+        document.getElementById('downloadButton').addEventListener('click', () => {
+            const canvas = document.getElementById('outputCanvas');
+            canvas.style.display = 'block'; // ダウンロード時はcanvasを表示
+            const link = document.createElement('a');
+            link.download = 'generated_image.png'; // ファイル名を指定
+            link.href = canvas.toDataURL(); // Canvasを画像データURLに変換
+            link.click(); // リンクをクリックしてダウンロードを開始
+            canvas.style.display = 'none'; // ダウンロード後はcanvasを隠す
+        });
+    </script>
+</body>
+</html>
