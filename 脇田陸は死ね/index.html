@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ビットレート変更デモ</title>
+    <script src="https://program-library.i-i.f5.si/js/audioLibrary/0.2.0.js"></script>
+</head>
+<body>
+    <h1>ビットレート変更デモ</h1>
+    <input type="file" id="audioFileInput" accept="audio/*" />
+    <br>
+    <label for="bitrateSlider">ビットレート (kbps): </label>
+    <input type="range" id="bitrateSlider" min="64" max="320" value="128" />
+    <span id="bitrateValue">128</span> kbps
+    <br>
+    <button id="processButton" disabled>ビットレートを変更して再生</button>
+    <audio id="audioPlayer" controls></audio>
+
+    <script>
+        const audioProcessor = new AudioProcessor();
+        
+        document.getElementById('audioFileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                await audioProcessor.processAudioFile(file);
+                document.getElementById('processButton').disabled = false;
+            }
+        });
+
+        document.getElementById('bitrateSlider').addEventListener('input', (event) => {
+            const bitrate = event.target.value;
+            document.getElementById('bitrateValue').textContent = bitrate;
+        });
+
+        document.getElementById('processButton').addEventListener('click', async () => {
+            const bitrate = document.getElementById('bitrateSlider').value;
+            await audioProcessor.changeBitrate(bitrate); // ビットレート変更の仮想イベント
+            const haxData = audioProcessor.haxData; // 処理済みデータ
+            const blob = new Blob([haxData]);
+            const url = URL.createObjectURL(blob);
+            document.getElementById('audioPlayer').src = url;
+            document.getElementById('audioPlayer').play(); // オーディオを再生する
+        });
+    </script>
+</body>
+</html>
