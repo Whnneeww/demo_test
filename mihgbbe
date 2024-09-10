@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>バイナリデータ暗号化ツール</title>
+    <script src="https://program-library.i-i.f5.si/js/whn/2.0.1.js"></script>
+</head>
+<body>
+    <h1>バイナリデータ暗号化ツール</h1>
+    <input type="file" id="fileInput" accept=".txt" />
+    <button id="encryptButton" disabled>暗号化</button>
+    <h3>暗号化されたデータ:</h3>
+    <pre id="output"></pre>
+
+    <script>
+        async function encryptBinaryData(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const encryptedBits = [];
+
+            for (let byte of uint8Array) {
+                let bits = byte.toString(2).padStart(8, '0'); // 8ビットに変換
+                let encryptedByte = '';
+
+                for (let i = 0; i < bits.length; i += 2) {
+                    const firstBit = bits[i];
+                    const secondBit = bits[i + 1];
+
+                    // 暗号化のロジック
+                    if (firstBit === '0') {
+                        encryptedByte += (secondBit === '0') ? '1' : '0';
+                    } else {
+                        encryptedByte += (secondBit === '0') ? '0' : '1';
+                    }
+                }
+                // エンコードされたバイナリを配列に追加
+                encryptedBits.push(parseInt(encryptedByte, 2));
+            }
+            // エンコードされたUint8Arrayを返す
+            return new Uint8Array(encryptedBits);
+        }
+
+        // ファイル選択時の処理
+        document.getElementById('fileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const encryptedData = await encryptBinaryData(file);
+                console.log("暗号化されたデータ:", encryptedData);
+
+                // 結果を表示
+                document.getElementById('output').textContent = encryptedData.toString();
+            }
+        });
+
+        // ファイルが選択されたときにボタンを有効化
+        document.getElementById('fileInput').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('encryptButton').disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
