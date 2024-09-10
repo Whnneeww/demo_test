@@ -1,0 +1,22 @@
+{
+    "entry1": {
+        "URL": "https://example.com/page1",
+        "pw": "password123"
+    },
+    "entry2": {
+        "URL": "https://example.com/page2",
+        "pw": ""
+    },
+    "entry3": {
+        "URL": "https://example.com/page3",
+        "pw": "secret456"
+    },
+    "entry4": {
+        "URL": "https://example.com/page4",
+        "pw": ""
+    },
+    "entry5": {
+        "URL": "https://example.com/page5",
+        "pw": "letmein789"
+    }
+}
