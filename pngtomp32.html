@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>画像から音声を生成</title>
+    <script src="https://program-library.i-i.f5.si/js/audioLibrary/0.2.0.js"></script>
+</head>
+<body>
+    <h1>画像から音を生成</h1>
+    <canvas id="inputCanvas" width="300" height="100"></canvas>
+    <button id="convertButton">音を生成</button>
+    <div id="haxOutput"></div>
+
+    <script>
+        // Canvasにサンプルのカラーを描く (例: 赤、緑、青)
+        const canvas = document.getElementById('inputCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#FF5733'; // サンプルカラー1
+        ctx.fillRect(0, 0, 100, 100);
+        ctx.fillStyle = '#AABBCC'; // サンプルカラー2
+        ctx.fillRect(100, 0, 100, 100);
+        ctx.fillStyle = '#33FF57'; // サンプルカラー3
+        ctx.fillRect(200, 0, 100, 100);
+
+        document.getElementById('convertButton').addEventListener('click', () => {
+            const haxData = getHaxDataFromCanvas(canvas);
+            document.getElementById('haxOutput').innerText = `生成されたHAXデータ: ${haxData}`;
+            playSoundFromHaxData(haxData);
+        });
+
+        function getHaxDataFromCanvas(canvas) {
+            const context = canvas.getContext('2d');
+            const haxData = [];
+            const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < imgData.data.length; i += 4) {
+                const r = imgData.data[i].toString(16).padStart(2, '0');
+                const g = imgData.data[i + 1].toString(16).padStart(2, '0');
+                const b = imgData.data[i + 2].toString(16).padStart(2, '0');
+                haxData.push(`${r}${g}${b}`);
+            }
+
+            return haxData.join(''); // HAXデータを1つの文字列に結合
+        }
+
+        function playSoundFromHaxData(haxData) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 2, audioContext.sampleRate); // 2秒のオーディオバッファを作成
+            const data = buffer.getChannelData(0);
+
+            haxData.split('').forEach((digit, index) => {
+                const frequency = parseInt(digit, 16) * 30; // RGBの値を周波数にマッピング
+                for (let i = 0; i < audioContext.sampleRate * 0.1; i++) { // 各色に対して0.1秒音を生成
+                    data[index * 1000 + i] = Math.sin(frequency * 2 * Math.PI * i / audioContext.sampleRate);
+                }
+            });
+
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start();
+        }
+    </script>
+</body>
+</html>
