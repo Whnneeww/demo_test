@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>画像データへのテキスト埋め込み</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>画像データへのテキスト埋め込み</h1>
+    
+    <h2>画像ファイルを選択</h2>
+    <input type="file" id="imageFileInput" accept="image/*" />
+    <button id="convertImageButton" disabled>画像を処理</button>
+
+    <h2>テキストボックスに内容を入力</h2>
+    <textarea id="textInput" rows="4" cols="50" placeholder="ここにテキストを入力してください..."></textarea>
+    
+    <script>
+        console.log("スクリプトが正常に読み込まれました！");
+
+        const updateImageData = (imageData, textData) => {
+            const startOffset = 54; // 一般的なBMP画像のヘッダーサイズ（メタデータの部分）
+            const endOffset = imageData.byteLength - 2; // データの終点を除去
+
+            // ランダムに置き換える範囲のスタートポイントを決定（メタデータを除く範囲に制限）
+            const randomStart = Math.floor(Math.random() * (endOffset - startOffset)) + startOffset;
+            // テキストデータのサイズを取得
+            const textSize = textData.byteLength;
+
+            // 画像データのコピーを作成
+            const newImageData = new Uint8Array(imageData);
+
+            // 置き換えの範囲を決定
+            const replaceEnd = Math.min(randomStart + textSize, endOffset);
+            
+            // バイナリーデータの置き換え
+            newImageData.set(textData, randomStart);
+
+            return newImageData;
+        };
+
+        const binarizeTextInput = (textString) => {
+            return new Uint8Array(new TextEncoder().encode(textString));
+        };
+
+        // 画像ファイルを受け取る
+        document.getElementById('imageFileInput').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            document.getElementById('convertImageButton').disabled = !file;
+        });
+
+        // 画像とテキストボックスからの入力を使って処理を開始
+        document.getElementById('convertImageButton').addEventListener('click', async () => {
+            const imageFile = document.getElementById('imageFileInput').files[0];
+            const textInput = document.getElementById('textInput').value;
+            
+            if (imageFile && textInput) {
+                // 画像ファイルをバイナリーデータに変換
+                const imageReader = new FileReader();
+                imageReader.onload = async (e) => {
+                    const imageData = e.target.result;
+
+                    // テキストボックスの内容をバイナリーデータに変換
+                    const textData = binarizeTextInput(textInput);
+                    const updatedImageData = updateImageData(new Uint8Array(imageData), textData);
+                    console.log("テキストデータを埋め込んだ画像のバイナリーデータ:", updatedImageData);
+                    alert("テキストが画像データに埋め込まれました！");
+                };
+                imageReader.readAsArrayBuffer(imageFile);
+            } else {
+                alert("画像ファイルとテキスト入力の両方が必要です！");
+            }
+        });
+    </script>
+</body>
+</html>
