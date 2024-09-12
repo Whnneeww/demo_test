@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ファイルZIP化デモ</title>
+    <script src="https://program-library.i-i.f5.si/js/whn/2.0.1.js"></script>
+</head>
+<body>
+    <h1>ファイルZIP化デモ</h1>
+    <input type="file" id="fileInput" multiple />
+    <button id="zipButton" disabled>ファイルをZIP化してダウンロード</button>
+
+    <script>
+        const filesToZip = [];
+
+        document.getElementById('fileInput').addEventListener('change', (event) => {
+            const files = event.target.files;
+            for (const file of files) {
+                filesToZip.push(file);
+            }
+            document.getElementById('zipButton').disabled = filesToZip.length === 0;
+        });
+
+        document.getElementById('zipButton').addEventListener('click', async () => {
+            const items = filesToZip.map(file => new WhneewwItem(file.name, 'file'));
+            
+            // メタデータの設定
+            const targetDate = new Date('2262-11-19T03:14:07Z');
+            for (const item of items) {
+                item.modifiedTime = targetDate; // メタデータの設定
+            }
+
+            // ZIP化してダウンロード
+            const blob = WhneewwArchive.create(items);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'download.zip';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
