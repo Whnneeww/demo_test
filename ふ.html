@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML 編集ツール</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        div {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .editable {
+            border: 1px dashed #007bff;
+            transition: background-color 0.2s;
+        }
+        .editable:hover {
+            background-color: #f0f8ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>HTML 編集ツール</h1>
+    <div contenteditable="true" class="editable">ここをクリックしてHTMLを編集できます。</div>
+    <h2>HTML 構造:</h2>
+    <pre id="output"></pre>
+    
+    <script>
+        const editableDiv = document.querySelector('.editable');
+        const output = document.getElementById('output');
+
+        // 編集後のHTMLをリアルタイムで表示
+        editableDiv.addEventListener('input', function() {
+            output.textContent = editableDiv.innerHTML;
+        });
+
+        // 編集できるようにするための初期表示
+        output.textContent = editableDiv.innerHTML;
+
+        // スマホやタブレットに対するタッチイベントも考慮
+        editableDiv.addEventListener('touchstart', function() {
+            editableDiv.focus();
+        });
+    </script>
+</body>
+</html>
