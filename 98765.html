@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>HDMIデモ</title>
+    <style>
+        #output {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>HDMI表示デモ</h1>
+    <label for="mediaUpload">画像または動画をアップロードしてください:</label>
+    <input type="file" id="mediaUpload" accept="image/*,video/*" />
+    
+    <button id="displayMediaButton">外部ディスプレイに表示</button>
+    <div id="output"></div>
+
+<script>
+    let uploadedMediaUrl = '';
+
+    // メディアがアップロードされたときの処理
+    document.getElementById('mediaUpload').addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedMediaUrl = e.target.result; // アップロードされたメディアのURLを取得
+                document.getElementById('output').textContent = 'メディアがアップロードされました！';
+            };
+            reader.readAsDataURL(file); // メディアをData URLに変換
+        } else {
+            uploadedMediaUrl = '';
+            document.getElementById('output').textContent = '';
+        }
+    });
+
+    // ボタンがクリックされたときの処理
+    document.getElementById('displayMediaButton').addEventListener('click', () => {
+        if (uploadedMediaUrl) {
+            const newWindow = window.open('', '_blank');
+            const fileType = uploadedMediaUrl.split(';')[0].split(':')[1]; // ファイルタイプを取得
+
+            if (fileType.includes('image')) {
+                // 画像の場合
+                newWindow.document.write(`<html><body><img src="${uploadedMediaUrl}" style="width: 100%; height: auto;" /></body></html>`);
+            } else if (fileType.includes('video')) {
+                // 動画の場合
+                newWindow.document.write(`<html><body><video src="${uploadedMediaUrl}" controls style="width: 100%; height: auto;"></video></body></html>`);
+            }
+            newWindow.document.close();
+        } else {
+            alert('メディアをアップロードしてください！');
+        }
+    });
+</script>
+</body>
+</html>
