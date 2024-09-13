@@ -9,20 +9,18 @@
             margin: 0; /* 余白をなくす */
             overflow: hidden; /* スクロールを無効にする */
         }
-        video {
-            display: none; /* カメラ表示を非表示にします */
-        }
         canvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100vw; /* ビューポート幅に合わせる */
             height: 100vh; /* ビューポート高さに合わせる */
+            background: white; /* 背景を白に設定 */
         }
     </style>
 </head>
 <body>
-    <video id="video" autoplay></video>
+    <video id="video" autoplay style="display: none;"></video>
     <canvas id="canvas"></canvas>
     
     <script>
@@ -34,10 +32,14 @@
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
                 video.srcObject = stream;
+                video.play();
+                draw(); // 描画の開始
             });
 
         // 描画処理
         function draw() {
+            context.clearRect(0, 0, canvas.width, canvas.height); // 背景を白でクリア
+
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             const frame = context.getImageData(0, 0, canvas.width, canvas.height);
             const data = frame.data;
@@ -55,13 +57,12 @@
                 }
             }
             context.putImageData(frame, 0, 0);
-            requestAnimationFrame(draw);
+            requestAnimationFrame(draw); // 次のフレームで再度描画
         }
 
-        // カンバスのサイズを設定し、描画開始
+        // カンバスのサイズを設定
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        draw();
     </script>
 </body>
 </html>
