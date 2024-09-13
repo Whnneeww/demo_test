@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カメラと色の重ね合わせ</title>
+    <style>
+        body {
+            margin: 0; /* 余白をなくす */
+            overflow: hidden; /* スクロールを無効にする */
+        }
+        video {
+            display: none; /* カメラ表示を非表示にします */
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw; /* ビューポート幅に合わせる */
+            height: 100vh; /* ビューポート高さに合わせる */
+        }
+    </style>
+</head>
+<body>
+    <video id="video" autoplay></video>
+    <canvas id="canvas"></canvas>
+    
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        // カメラの初期化
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            });
+
+        // 描画処理
+        function draw() {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const frame = context.getImageData(0, 0, canvas.width, canvas.height);
+            const data = frame.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];     // 赤
+                const g = data[i + 1]; // 緑
+                const b = data[i + 2]; // 青
+                // 柿色の範囲を検出（ここは調整が必要です）
+                if (r > 200 && g < 120 && b < 120) {
+                    // 柿色の位置に青色を載せる
+                    data[i] = 0;     // 赤を消す
+                    data[i + 1] = 0; // 緑を消す
+                    data[i + 2] = 255; // 青の強さを最大にする
+                }
+            }
+            context.putImageData(frame, 0, 0);
+            requestAnimationFrame(draw);
+        }
+
+        // カンバスのサイズを設定し、描画開始
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        draw();
+    </script>
+</body>
+</html>
