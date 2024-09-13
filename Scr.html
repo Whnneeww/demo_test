@@ -2,33 +2,53 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>HDMI出力の画像/動画プレイヤー</title>
+    <title>HDMIデモ</title>
+    <style>
+        #output {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
-    <h1>画像または動画を選択</h1>
-    <input type="file" id="mediaInput" accept="image/*,video/*" />
-    <video id="videoOutput" controls style="display:none; width: 100%;"></video>
-    <img id="imageOutput" style="display:none; width: 100%;" />
+    <h1>HDMI表示デモ</h1>
+    <label for="imageUpload">画像をアップロードしてください:</label>
+    <input type="file" id="imageUpload" accept="image/*" />
     
-    <script>
-        const mediaInput = document.getElementById('mediaInput');
-        const videoOutput = document.getElementById('videoOutput');
-        const imageOutput = document.getElementById('imageOutput');
+    <button id="displayImageButton">外部ディスプレイに表示</button>
+    <div id="output"></div>
 
-        mediaInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            const fileURL = URL.createObjectURL(file);
+<script>
+    let uploadedImageUrl = '';
 
-            if (file.type.startsWith('video/')) {
-                videoOutput.src = fileURL;
-                videoOutput.style.display = 'block';
-                imageOutput.style.display = 'none';
-            } else if (file.type.startsWith('image/')) {
-                imageOutput.src = fileURL;
-                imageOutput.style.display = 'block';
-                videoOutput.style.display = 'none';
-            }
-        });
-    </script>
+    // 画像がアップロードされたときの処理
+    document.getElementById('imageUpload').addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedImageUrl = e.target.result; // アップロードされた画像のURLを取得
+                document.getElementById('output').textContent = '画像がアップロードされました！';
+            };
+            reader.readAsDataURL(file); // 画像をData URLに変換
+        } else {
+            uploadedImageUrl = '';
+            document.getElementById('output').textContent = '';
+        }
+    });
+
+    // ボタンがクリックされたときの処理
+    document.getElementById('displayImageButton').addEventListener('click', () => {
+        if (uploadedImageUrl) {
+            // 新しいウィンドウを開くことで外部ディスプレイに画像を表示
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(`<html><body><img src="${uploadedImageUrl}" style="width: 100%; height: auto;" /></body></html>`);
+            newWindow.document.close();
+        } else {
+            alert('画像をアップロードしてください！');
+        }
+    });
+</script>
 </body>
 </html>
