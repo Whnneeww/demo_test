@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画像アップロードと切替</title>
+    <style>
+        #screen {
+            width: 80%;
+            height: 60vh;
+            margin: 20px auto;
+            border: 2px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; 
+        }
+        img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>画像アップロードと切替</h1>
+    <input type="file" id="fileInput" accept="image/*" multiple>
+    <div id="screen"></div>
+    <div id="buttonContainer"></div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const screen = document.getElementById('screen');
+        const buttonContainer = document.getElementById('buttonContainer');
+        let images = [];
+        let currentIndex = 0;
+
+        fileInput.addEventListener('change', (event) => {
+            images = []; // リセット
+            buttonContainer.innerHTML = ''; // ボタンをクリア
+            const files = event.target.files;
+
+            for (const file of files) {
+                const url = URL.createObjectURL(file);
+                images.push(url);
+                createButton(url);
+            }
+
+            if (images.length > 0) {
+                displayImage(images[currentIndex]);
+            }
+        });
+
+        function createButton(url) {
+            const button = document.createElement('button');
+            button.innerText = '表示';
+            button.addEventListener('click', () => displayImage(url));
+            buttonContainer.appendChild(button);
+        }
+
+        function displayImage(url) {
+            screen.innerHTML = ''; // スクリーンをクリア
+            const img = document.createElement('img');
+            img.src = url;
+            screen.appendChild(img);
+        }
+    </script>
+</body>
+</html>
