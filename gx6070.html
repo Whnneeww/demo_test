@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>URLからHTMLを取得して表示</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <iframe id="contentFrame" src=""></iframe>
+    
+    <script>
+        // URLを取得する関数
+        function getUrlFromHash() {
+            return window.location.hash.substring(1); // #を取り除いた部分を返す
+        }
+
+        // URLを取得してフレームに設定
+        function loadContent() {
+            const url = getUrlFromHash();
+            if (url) {
+                document.getElementById('contentFrame').src = url;
+            } else {
+                document.getElementById('contentFrame').src = 'https://example.com'; // デフォルトのURL
+            }
+        }
+
+        // ページ読み込み時にコンテンツを読み込む
+        window.onload = loadContent;
+    </script>
+</body>
+</html>
