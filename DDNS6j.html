@@ -1,0 +1,81 @@
+<div id="tb-form">
+
+
+    <!-- 投稿用フォーム -->
+<form hx-post="https://trendect.online/run_post.php" hx-target="#posts" hx-trigger="submit">
+    <label>投稿内容</label><br>
+    <textarea name="content" class="oi" id="post_content"></textarea><br>
+    <input type="submit" value="投稿" class="bt1">
+
+</form>
+
+<!-- ファイルアップロード用フォーム -->
+<form hx-post="https://trendect.online/run_post_image_up.php" hx-target="#post_content" hx-swap="beforeend" enctype="multipart/form-data">
+<label>画像</label>
+    <input type="file" name="upload_file">
+    <button type="submit" hx-include="#post_content" class="bt1">添付</button>
+</form>
+
+    <script>
+let originalContent = ''; // 元のBBCodeを保持する変数
+
+        document.getElementById('editor').addEventListener('input', function() {
+            let content = this.innerHTML;
+
+            // カーソルの位置を保存
+            let selection = saveSelection();
+
+            // 入力された内容をBBCodeとして保存
+            originalContent = this.textContent
+                .replace(/<strong>(.*?)<\/strong>/g, '[b]$1[/b]')   // <strong> -> [b]
+                .replace(/<em>(.*?)<\/em>/g, '[i]$1[/i]')           // <em> -> [i]
+                .replace(/<u>(.*?)<\/u>/g, '[u]$1[/u]')             // <u> -> [u]
+                .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[url]$1[/url]') // <a> -> [url]
+                .replace(/<img src="(.*?)" alt="画像".*?>/g, '[img]$1[/img]'); // <img> -> [img]
+
+            // 表示用のBBCodeをHTMLに変換
+            content = content
+                .replace(/\[b\](.*?)\[\/b\]/g, '<strong>$1</strong>')   // [b]太字[/b] -> <strong>
+                .replace(/\[i\](.*?)\[\/i\]/g, '<em>$1</em>')          // [i]斜体[/i] -> <em>
+                .replace(/\[u\](.*?)\[\/u\]/g, '<u>$1</u>')            // [u]下線[/u] -> <u>
+                .replace(/\[url\](.*?)\[\/url\]/g, '<a href="$1">$1</a>') // [url]リンク[/url] -> <a>
+                .replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" alt="画像" style="max-width: 100%;">'); // [img]URL[/img] -> <img>
+
+            // 変換した内容を一時的なdivに反映させて、HTMLの変更を最小限にする
+            let tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+
+            // 編集中の要素と異なる場合だけ更新する
+            if (this.innerHTML !== tempDiv.innerHTML) {
+                this.innerHTML = tempDiv.innerHTML;
+            }
+
+            // カーソルの位置を復元
+            restoreSelection(selection);
+        });
+
+        // カーソル位置を記憶する関数
+        function saveSelection() {
+            let sel = window.getSelection();
+            if (sel.rangeCount > 0) {
+                return sel.getRangeAt(0);
+            }
+            return null;
+        }
+
+        // カーソル位置を復元する関数
+        function restoreSelection(range) {
+            if (range) {
+                let sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        }
+
+        // フォーム送信前にBBCodeの内容をtextareaにコピー
+        document.getElementById('bbcodeForm').addEventListener('submit', function(event) {
+            // 元のBBCode形式のコンテンツを送信する
+            document.getElementById('bbcodeContent').value = originalContent;
+        });
+    </script>
+</div>
