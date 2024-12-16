@@ -3,49 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>無限スクロールのサンプル</title>
+    <title>無限スクロールのデモ (iframe埋め込み)</title>
     <style>
-        #posts {
-            margin: 20px;
+        body {
+            font-family: Arial, sans-serif;
         }
-        .post {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin: 5px 0;
+        #iframeContainer {
+            width: 100%;
+            height: 600px; /* 適宜高さを調整してください */
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
     </style>
 </head>
 <body>
 
-<div id="posts"></div>
+<h1>無限スクロールのデモ (iframe埋め込み)</h1>
+<div id="iframeContainer">
+    <iframe id="postIframe" src="https://trendect.online/get_posts.php?page=1"></iframe>
+</div>
 
 <script>
-    let currentPage = 1;
+let currentPage = 1;
+const iframe = document.getElementById('postIframe');
 
-    function loadPosts(page) {
-        fetch(`https://trendect.online/get_posts.php?page=${page}`)
-            .then(response => response.json())
-            .then(data => {
-                const postsContainer = document.getElementById('posts');
-                data.posts.forEach(post => {
-                    const postElement = document.createElement('div');
-                    postElement.className = 'post';
-                    postElement.innerText = post.title; // 適宜他の投稿データを使用してください
-                    postsContainer.appendChild(postElement);
-                });
-            })
-            .catch(error => console.error('エラー:', error));
-    }
+// スクロールイベントリスナー
+iframe.onload = () => {
+    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-    window.addEventListener('scroll', () => {
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+    iframeDocument.addEventListener('scroll', () => {
+        if (iframeDocument.documentElement.scrollHeight - iframeDocument.documentElement.scrollTop <= iframeDocument.documentElement.clientHeight) {
+            // スクロールが下部に達した場合、新しいページを読み込む
             currentPage++;
-            loadPosts(currentPage);
+            iframe.src = `https://trendect.online/get_posts.php?page=${currentPage}`;
         }
     });
-
-    // 初回の読み込み
-    loadPosts(currentPage);
+};
 </script>
 
 </body>
