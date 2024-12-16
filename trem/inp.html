@@ -2,35 +2,64 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Iframe Full HTML Fetch</title>
+    <title>スクロールでテキストデータを読み込む</title>
     <style>
-        iframe {
-            width: 100%;
-            height: 300px;
-            border: 1px solid #ddd;
+        #content {
+            max-height: 90vh; /* コンテンツの高さを制限してスクロール可能に */
+            overflow-y: auto; /* 縦にスクロール */
+            border: 1px solid #ccc; 
+            padding: 10px;
         }
     </style>
 </head>
 <body>
+    <div id="content">
+        <h1>コンテンツセクション</h1>
+    </div>
 
-<iframe id="myIframe" src="https://trendect.online/get_posts.php?page=1"></iframe>
-<button id="fetchContent">全コンテンツを取得</button>
-<div id="result"></div>
+    <script>
+        let currentId = 1; // 初期ID
 
-<script>
-    document.getElementById('fetchContent').onclick = function() {
-        const iframe = document.getElementById('myIframe');
+        async function fetchTextData(id) {
+            const url = `http://whnneeww.starfree.jp/fetm.php?id=${id}`;
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const textData = await response.text();
+                    return textData;
+                } else {
+                    console.error('取得失敗:', response.status);
+                    return null;
+                }
+            } catch (error) {
+                console.error('エラー:', error);
+                return null;
+            }
+        }
 
-        // iframeのコンテンツドキュメントを取得
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        async function loadTextData() {
+            const textData = await fetchTextData(currentId);
+            if (textData) {
+                const contentDiv = document.getElementById('content');
+                const newText = document.createElement('div');
+                newText.innerHTML = textData; // HTMLとして追加
+                contentDiv.appendChild(newText);
+                currentId++; // IDをインクリメント
+            } else {
+                console.log('データが取得できませんでした。');
+            }
+        }
 
-        // 全HTMLを取得
-        const fullContent = iframeDoc.documentElement.outerHTML; // ここで全てのHTMLを取得
+        window.addEventListener('scroll', function() {
+            const contentDiv = document.getElementById('content');
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+                // スクロールが一番下に達したとき
+                loadTextData();
+            }
+        });
 
-        // コンテンツを表示
-        document.getElementById('result').innerHTML = fullContent;
-    };
-</script>
-
+        // 初回読み込み
+        loadTextData();
+    </script>
 </body>
 </html>
