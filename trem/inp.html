@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>無限スクロールのサンプル</title>
+    <style>
+        #posts {
+            margin: 20px;
+        }
+        .post {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="posts"></div>
+
+<script>
+    let currentPage = 1;
+
+    function loadPosts(page) {
+        fetch(`https://trendect.online/get_posts.php?page=${page}`)
+            .then(response => response.json())
+            .then(data => {
+                const postsContainer = document.getElementById('posts');
+                data.posts.forEach(post => {
+                    const postElement = document.createElement('div');
+                    postElement.className = 'post';
+                    postElement.innerText = post.title; // 適宜他の投稿データを使用してください
+                    postsContainer.appendChild(postElement);
+                });
+            })
+            .catch(error => console.error('エラー:', error));
+    }
+
+    window.addEventListener('scroll', () => {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+            currentPage++;
+            loadPosts(currentPage);
+        }
+    });
+
+    // 初回の読み込み
+    loadPosts(currentPage);
+</script>
+
+</body>
+</html>
